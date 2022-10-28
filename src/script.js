@@ -92,24 +92,24 @@ function update(elapsed) {
   Timing.update(state.timing.update, elapsed);
 
   if (state.activeKeys.ArrowUp) {
-    state.player.velocity.y = -state.player.speed;
+    state.player.velocity.y = -1;
   } else if (state.activeKeys.ArrowDown) {
-    state.player.velocity.y = state.player.speed;
+    state.player.velocity.y = 1;
   } else {
     state.player.velocity.y = 0;
   }
 
   if (state.activeKeys.ArrowRight) {
-    state.player.velocity.x = state.player.speed;
+    state.player.velocity.x = 1;
   } else if (state.activeKeys.ArrowLeft) {
-    state.player.velocity.x = -state.player.speed;
+    state.player.velocity.x = -1;
   } else {
     state.player.velocity.x = 0;
   }
 
   Vector.multiply(
     state.player.velocity,
-    Timing.scale(state.timing.update, 1000)
+    Timing.scale(state.timing.update, 1000, state.player.speed)
   );
   Vector.add(state.player.position, state.player.velocity);
 }
