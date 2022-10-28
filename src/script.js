@@ -25,3 +25,26 @@ function draw() {
 }
 
 draw();
+
+window.addEventListener("keydown", (e) => {
+  console.log(e);
+
+  switch (e.key) {
+    case "ArrowUp":
+      state.player.y -= 1;
+      break;
+    case "ArrowDown":
+      state.player.y += 1;
+      break;
+    case "ArrowLeft":
+      state.player.x -= 1;
+      break;
+    case "ArrowRight":
+      state.player.x += 1;
+      break;
+    default:
+      return;
+  }
+
+  e.preventDefault();
+});
