@@ -80,9 +80,10 @@ function draw(elapsed) {
   context.font = "14px monospace";
   context.textBaseline = "top";
 
-  context.fillText(`Ticks   ${1000 / state.timing.tick.delta}`, 0, 0);
-  context.fillText(`Draws   ${1000 / state.timing.draw.delta}`, 0, 14);
-  context.fillText(`Updates ${1000 / state.timing.update.delta}`, 0, 28);
+  context.fillText(`TPS ${1000 / state.timing.tick.delta}`, 0, 0);
+  context.fillText(`DPS ${1000 / state.timing.draw.delta}`, 0, 14);
+  context.fillText(`UPS ${1000 / state.timing.update.delta}`, 0, 28);
+  context.fillText(`DT  ${state.timing.update.delta}`, 0, 42);
 
   context.fillStyle = "blue";
   context.fillRect(state.player.position.x, state.player.position.y, 16, 16);
