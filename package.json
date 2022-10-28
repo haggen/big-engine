@@ -1,0 +1,16 @@
+{
+  "name": "rpg",
+  "version": "1.0.0",
+  "description": "",
+  "source": "src/index.html",
+  "scripts": {
+    "build": "parcel build",
+    "start": "parcel"
+  },
+  "keywords": [],
+  "author": "Arthur <arthur@corenzan.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "parcel": "^2.7.0"
+  }
+}
