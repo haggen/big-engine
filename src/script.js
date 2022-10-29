@@ -1,6 +1,3 @@
-const canvas = document.querySelector("canvas");
-const context = canvas.getContext("2d");
-
 const Timing = {
   update(timing, elapsed) {
     timing.delta = elapsed - timing.elapsed;
@@ -12,7 +9,7 @@ const Timing = {
   },
 };
 
-export const Vector = {
+const Vector = {
   add(a, b) {
     a.x += b.x;
     a.y += b.y;
@@ -33,110 +30,146 @@ export const Vector = {
   },
 };
 
-const state = {
-  timing: {
-    tick: {
-      elapsed: 0,
-      delta: 0,
+const Game = {
+  canvas: null,
+  context: null,
+
+  state: {
+    timing: {
+      tick: {
+        elapsed: 0,
+        delta: 0,
+      },
+
+      draw: {
+        elapsed: 0,
+        delta: 0,
+      },
+
+      poll: {
+        elapsed: 0,
+        delta: 0,
+      },
+
+      update: {
+        elapsed: 0,
+        delta: 0,
+      },
     },
 
-    draw: {
-      elapsed: 0,
-      delta: 0,
-    },
+    activeKeys: {},
 
-    update: {
-      elapsed: 0,
-      delta: 0,
+    player: {
+      position: { x: 0, y: 0 },
+      velocity: { x: 0, y: 0 },
+      speed: 300,
     },
   },
 
-  activeKeys: {},
+  config: {
+    timing: {
+      update: {
+        rate: 1000 / 100,
+      },
+      draw: {
+        rate: 1000 / 30,
+      },
+    },
+  },
 
-  player: {
-    position: { x: 0, y: 0 },
-    velocity: { x: 0, y: 0 },
-    speed: 200,
+  tick(elapsed) {
+    Timing.update(this.state.timing.tick, elapsed);
+
+    if (
+      this.state.timing.draw.elapsed + this.config.timing.draw.rate <
+      elapsed
+    ) {
+      this.draw(elapsed);
+    }
+
+    this.poll(elapsed);
+
+    if (
+      this.state.timing.update.elapsed + this.config.timing.update.rate <
+      elapsed
+    ) {
+      this.update(elapsed);
+    }
+
+    window.requestAnimationFrame((elapsed) => this.tick(elapsed));
+  },
+
+  draw(elapsed) {
+    Timing.update(this.state.timing.draw, elapsed);
+
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+    this.context.fillStyle = "blue";
+    this.context.font = "14px monospace";
+    this.context.textBaseline = "top";
+
+    this.context.fillText(`TPS ${1000 / this.state.timing.tick.delta}`, 0, 0);
+    this.context.fillText(`DPS ${1000 / this.state.timing.draw.delta}`, 0, 14);
+    this.context.fillText(
+      `UPS ${1000 / this.state.timing.update.delta}`,
+      0,
+      28
+    );
+    this.context.fillText(`UDT ${this.state.timing.update.delta}`, 0, 42);
+
+    this.context.fillStyle = "blue";
+    this.context.fillRect(
+      this.state.player.position.x,
+      this.state.player.position.y,
+      16,
+      16
+    );
+  },
+
+  poll(elapsed) {
+    Timing.update(this.state.timing.poll, elapsed);
+
+    if (this.state.activeKeys.ArrowUp) {
+      this.state.player.velocity.y = -1;
+    } else if (this.state.activeKeys.ArrowDown) {
+      this.state.player.velocity.y = 1;
+    } else {
+      this.state.player.velocity.y = 0;
+    }
+
+    if (this.state.activeKeys.ArrowRight) {
+      this.state.player.velocity.x = 1;
+    } else if (this.state.activeKeys.ArrowLeft) {
+      this.state.player.velocity.x = -1;
+    } else {
+      this.state.player.velocity.x = 0;
+    }
+  },
+
+  update(elapsed) {
+    Timing.update(this.state.timing.update, elapsed);
+
+    Vector.multiply(
+      this.state.player.velocity,
+      Timing.scale(this.state.timing.update, 1000, this.state.player.speed)
+    );
+    Vector.add(this.state.player.position, this.state.player.velocity);
+  },
+
+  start() {
+    this.canvas = document.querySelector("canvas");
+    this.context = this.canvas.getContext("2d");
+
+    window.addEventListener("keydown", (e) => {
+      this.state.activeKeys[e.key] = true;
+    });
+
+    window.addEventListener("keyup", (e) => {
+      delete this.state.activeKeys[e.key];
+    });
+
+    this.tick(0);
   },
 };
 
-const config = {
-  timing: {
-    update: {
-      rate: 1000 / 60,
-    },
-    draw: {
-      rate: 1000 / 60,
-    },
-  },
-};
-
-function draw(elapsed) {
-  Timing.update(state.timing.draw, elapsed);
-
-  context.clearRect(0, 0, canvas.width, canvas.height);
-
-  context.fillStyle = "blue";
-  context.font = "14px monospace";
-  context.textBaseline = "top";
-
-  context.fillText(`TPS ${1000 / state.timing.tick.delta}`, 0, 0);
-  context.fillText(`DPS ${1000 / state.timing.draw.delta}`, 0, 14);
-  context.fillText(`UPS ${1000 / state.timing.update.delta}`, 0, 28);
-  context.fillText(`DT  ${state.timing.update.delta}`, 0, 42);
-
-  context.fillStyle = "blue";
-  context.fillRect(state.player.position.x, state.player.position.y, 16, 16);
-}
-
-function update(elapsed) {
-  Timing.update(state.timing.update, elapsed);
-
-  if (state.activeKeys.ArrowUp) {
-    state.player.velocity.y = -1;
-  } else if (state.activeKeys.ArrowDown) {
-    state.player.velocity.y = 1;
-  } else {
-    state.player.velocity.y = 0;
-  }
-
-  if (state.activeKeys.ArrowRight) {
-    state.player.velocity.x = 1;
-  } else if (state.activeKeys.ArrowLeft) {
-    state.player.velocity.x = -1;
-  } else {
-    state.player.velocity.x = 0;
-  }
-
-  Vector.multiply(
-    state.player.velocity,
-    Timing.scale(state.timing.update, 1000, state.player.speed)
-  );
-  Vector.add(state.player.position, state.player.velocity);
-}
-
-function tick(elapsed) {
-  Timing.update(state.timing.tick, elapsed);
-
-  if (state.timing.update.elapsed + config.timing.update.rate < elapsed) {
-    update(elapsed);
-  }
-
-  if (state.timing.draw.elapsed + config.timing.draw.rate < elapsed) {
-    draw(elapsed);
-  }
-
-  window.requestAnimationFrame(tick);
-}
-
-tick();
-
-window.addEventListener("keydown", (e) => {
-  state.activeKeys[e.key] = true;
-  e.preventDefault();
-});
-
-window.addEventListener("keyup", (e) => {
-  delete state.activeKeys[e.key];
-  e.preventDefault();
-});
+Game.start();
