@@ -9,6 +9,7 @@
 3. https://www.gamedev.net/tutorials/programming/math-and-physics/practical-use-of-vector-math-in-games-r2968/
 4. http://gameprogrammingpatterns.com/game-loop.html
 5. https://www.construct.net/en/tutorials/delta-time-framerate-2
+6. https://spicyyoghurt.com/tutorials/html5-javascript-game-development/create-a-proper-game-loop-with-requestanimationframe
 
 ## Legal
 
