@@ -1,143 +1,108 @@
-import { Timing } from "./timing";
-import { Vector } from "./vector";
+export class Game {
+  canvasElement = null;
+  renderingContext = null;
 
-export const Game = {
-  canvas: null,
-  context: null,
+  stats = {
+    loop: { elapsed: 0, delta: 0 },
+    render: { elapsed: 0, delta: 0 },
+    input: { elapsed: 0, delta: 0 },
+    update: { elapsed: 0, delta: 0 },
+  };
 
-  state: {
-    timing: {
-      tick: {
-        elapsed: 0,
-        delta: 0,
-      },
+  config = {
+    render: { rate: 1000 / 60 },
+    update: { rate: 1000 / 100 },
+  };
 
-      draw: {
-        elapsed: 0,
-        delta: 0,
-      },
+  entities = [];
+  input = [];
 
-      poll: {
-        elapsed: 0,
-        delta: 0,
-      },
+  constructor(canvasElement) {
+    this.canvasElement = canvasElement;
+    this.renderingContext = canvasElement.getContext("2d");
+  }
 
-      update: {
-        elapsed: 0,
-        delta: 0,
-      },
-    },
+  addEntity(entity) {
+    entity.game = this;
+    this.entities.push(entity);
+  }
 
-    activeKeys: {},
+  render() {
+    const { stats } = this;
+    const { rate } = this.config.render;
 
-    player: {
-      position: { x: 0, y: 0 },
-      velocity: { x: 0, y: 0 },
-      speed: 300,
-    },
-  },
+    const delta = stats.loop.elapsed - stats.render.elapsed;
 
-  config: {
-    timing: {
-      update: {
-        rate: 1000 / 100,
-      },
-      draw: {
-        rate: 1000 / 30,
-      },
-    },
-  },
-
-  tick(elapsed) {
-    const { timing } = this.state;
-
-    Timing.update(timing.tick, elapsed);
-
-    this.draw(elapsed);
-    this.poll(elapsed);
-    this.update(elapsed);
-
-    window.requestAnimationFrame((elapsed) => {
-      this.tick(elapsed);
-    });
-  },
-
-  draw(elapsed) {
-    const { timing, player } = this.state;
-    const { rate } = this.config.timing.draw;
-
-    if (timing.draw.elapsed + rate > elapsed) {
+    if (rate > delta) {
       return;
     }
 
-    Timing.update(timing.draw, elapsed);
+    stats.render.delta = delta;
+    stats.render.elapsed = stats.loop.elapsed;
 
-    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-    this.context.fillStyle = "blue";
-    this.context.font = "14px monospace";
-    this.context.textBaseline = "top";
-
-    this.context.fillText(`TPS ${1000 / timing.tick.delta}`, 0, 0);
-    this.context.fillText(`DPS ${1000 / timing.draw.delta}`, 0, 14);
-    this.context.fillText(`UPS ${1000 / timing.update.delta}`, 0, 28);
-    this.context.fillText(`UDT ${timing.update.delta}`, 0, 42);
-
-    this.context.fillStyle = "blue";
-    this.context.fillRect(player.position.x, player.position.y, 16, 16);
-  },
-
-  poll(elapsed) {
-    const { timing, player, activeKeys } = this.state;
-
-    Timing.update(timing.poll, elapsed);
-
-    if (activeKeys.ArrowUp) {
-      player.velocity.y = -1;
-    } else if (activeKeys.ArrowDown) {
-      player.velocity.y = 1;
-    } else {
-      player.velocity.y = 0;
-    }
-
-    if (activeKeys.ArrowRight) {
-      player.velocity.x = 1;
-    } else if (activeKeys.ArrowLeft) {
-      player.velocity.x = -1;
-    } else {
-      player.velocity.x = 0;
-    }
-  },
-
-  update(elapsed) {
-    const { player, timing } = this.state;
-    const { rate } = this.config.timing.update;
-
-    if (timing.update.elapsed + rate > elapsed) {
-      return;
-    }
-
-    Timing.update(timing.update, elapsed);
-
-    Vector.multiply(
-      player.velocity,
-      Timing.scale(timing.update, 1000, player.speed)
+    this.renderingContext.clearRect(
+      0,
+      0,
+      this.canvasElement.width,
+      this.canvasElement.height
     );
-    Vector.add(player.position, player.velocity);
-  },
+
+    this.entities.forEach((entity) => {
+      entity.trigger("render", stats.render);
+    });
+  }
+
+  evalInput() {
+    const { stats } = this;
+
+    stats.input.delta = stats.loop.elapsed - stats.input.elapsed;
+    stats.input.elapsed = stats.loop.elapsed;
+
+    this.entities.forEach((entity) => {
+      entity.trigger("input", stats.input);
+    });
+  }
+
+  update() {
+    const { stats } = this;
+    const { rate } = this.config.update;
+
+    const delta = stats.loop.elapsed - stats.update.elapsed;
+
+    if (rate > delta) {
+      return;
+    }
+
+    stats.update.delta = delta;
+    stats.update.elapsed = stats.loop.elapsed;
+
+    this.entities.forEach((entity) => {
+      entity.trigger("update", stats.update);
+    });
+  }
+
+  loop(elapsed) {
+    const { stats } = this;
+
+    stats.loop.delta = elapsed - stats.loop.elapsed;
+    stats.loop.elapsed = elapsed;
+
+    this.render();
+    this.evalInput();
+    this.update();
+
+    window.requestAnimationFrame(this.loop.bind(this));
+  }
 
   start() {
-    this.canvas = document.querySelector("canvas");
-    this.context = this.canvas.getContext("2d");
-
     window.addEventListener("keydown", (e) => {
-      this.state.activeKeys[e.key] = true;
+      this.input[e.key] = true;
     });
 
     window.addEventListener("keyup", (e) => {
-      delete this.state.activeKeys[e.key];
+      delete this.input[e.key];
     });
 
-    this.tick(0);
-  },
-};
+    this.loop(0);
+  }
+}
