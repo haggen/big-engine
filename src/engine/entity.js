@@ -1,21 +1,12 @@
 export class Entity {
-  game = null;
-
   props = {};
+  game = null;
 
   subscribers = {
     render: [],
     input: [],
     update: [],
   };
-
-  set(prop, value) {
-    this.props[prop] = value;
-  }
-
-  get(prop) {
-    return this.props[prop];
-  }
 
   on(event, subscriber) {
     this.subscribers[event].push(subscriber);

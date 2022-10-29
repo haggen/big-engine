@@ -3,15 +3,9 @@ export class Game {
   renderingContext = null;
 
   stats = {
-    loop: { elapsed: 0, delta: 0 },
-    render: { elapsed: 0, delta: 0 },
-    input: { elapsed: 0, delta: 0 },
-    update: { elapsed: 0, delta: 0 },
-  };
-
-  config = {
-    render: { rate: 1000 / 60 },
-    update: { rate: 1000 / 100 },
+    count: 0,
+    delta: 0,
+    elapsed: 0,
   };
 
   entities = [];
@@ -28,18 +22,6 @@ export class Game {
   }
 
   render() {
-    const { stats } = this;
-    const { rate } = this.config.render;
-
-    const delta = stats.loop.elapsed - stats.render.elapsed;
-
-    if (rate > delta) {
-      return;
-    }
-
-    stats.render.delta = delta;
-    stats.render.elapsed = stats.loop.elapsed;
-
     this.renderingContext.clearRect(
       0,
       0,
@@ -48,50 +30,32 @@ export class Game {
     );
 
     this.entities.forEach((entity) => {
-      entity.trigger("render", stats.render);
+      entity.trigger("render", this.stats);
     });
   }
 
-  evalInput() {
-    const { stats } = this;
-
-    stats.input.delta = stats.loop.elapsed - stats.input.elapsed;
-    stats.input.elapsed = stats.loop.elapsed;
-
+  evaluate() {
     this.entities.forEach((entity) => {
-      entity.trigger("input", stats.input);
+      entity.trigger("input", this.stats);
     });
   }
 
   update() {
-    const { stats } = this;
-    const { rate } = this.config.update;
-
-    const delta = stats.loop.elapsed - stats.update.elapsed;
-
-    if (rate > delta) {
-      return;
-    }
-
-    stats.update.delta = delta;
-    stats.update.elapsed = stats.loop.elapsed;
-
     this.entities.forEach((entity) => {
-      entity.trigger("update", stats.update);
+      entity.trigger("update", this.stats);
     });
   }
 
   loop(elapsed) {
-    const { stats } = this;
+    requestAnimationFrame((elapsed) => this.loop(elapsed));
 
-    stats.loop.delta = elapsed - stats.loop.elapsed;
-    stats.loop.elapsed = elapsed;
+    this.stats.count += 1;
+    this.stats.delta = elapsed - this.stats.elapsed;
+    this.stats.elapsed = elapsed;
 
     this.render();
-    this.evalInput();
+    this.evaluate();
     this.update();
-
-    window.requestAnimationFrame(this.loop.bind(this));
   }
 
   start() {
