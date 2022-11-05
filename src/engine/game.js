@@ -1,14 +1,34 @@
+const keyMap = {
+  [" "]: "Space",
+};
+
 export class Game {
   canvasElement = null;
   renderingContext = null;
 
-  stats = {
-    count: 0,
-    delta: 0,
-    elapsed: 0,
+  config = {
+    simulation: {
+      rate: 1000 / 100,
+    },
   };
 
-  entities = [];
+  statistics = {
+    time: 0,
+
+    rendering: {
+      count: 0,
+      delta: 0,
+      elapsed: 0,
+    },
+
+    simulation: {
+      step: 0,
+      elapsed: 0,
+      accumulator: 0,
+    },
+  };
+
+  world = [];
   input = [];
 
   constructor(canvasElement) {
@@ -18,10 +38,18 @@ export class Game {
 
   addEntity(entity) {
     entity.game = this;
-    this.entities.push(entity);
+    this.world.push(entity);
   }
 
-  render() {
+  findEntity(predicate) {
+    return this.world.find(predicate);
+  }
+
+  render(delta) {
+    const now = performance.now();
+
+    this.statistics.rendering.count += 1;
+
     this.renderingContext.clearRect(
       0,
       0,
@@ -29,44 +57,63 @@ export class Game {
       this.canvasElement.height
     );
 
-    this.entities.forEach((entity) => {
-      entity.trigger("render", this.stats);
+    this.world.forEach((entity) => {
+      const now = performance.now();
+
+      entity.statistics.rendering.count += 1;
+      entity.trigger("render", delta / 1000);
+
+      entity.statistics.rendering.elapsed = performance.now() - now;
     });
+
+    this.statistics.rendering.elapsed = performance.now() - now;
   }
 
-  evaluate() {
-    this.entities.forEach((entity) => {
-      entity.trigger("input", this.stats);
+  update(delta) {
+    const now = performance.now();
+
+    this.statistics.simulation.step += 1;
+
+    this.world.forEach((entity) => {
+      const now = performance.now();
+      entity.statistics.simulation.step += 1;
+      entity.trigger("update", delta / 1000);
+      entity.statistics.simulation.elapsed = performance.now() - now;
     });
+
+    this.statistics.simulation.elapsed = performance.now() - now;
   }
 
-  update() {
-    this.entities.forEach((entity) => {
-      entity.trigger("update", this.stats);
-    });
+  loop() {
+    requestAnimationFrame(() => this.loop());
+
+    const time = performance.now();
+    const delta = time - this.statistics.time;
+
+    this.statistics.time = time;
+    this.statistics.simulation.accumulator += delta;
+
+    while (
+      this.statistics.simulation.accumulator >= this.config.simulation.rate
+    ) {
+      this.statistics.simulation.accumulator -= this.config.simulation.rate;
+      this.update(this.config.simulation.rate);
+    }
+
+    this.render(delta);
   }
 
-  loop(elapsed) {
-    requestAnimationFrame((elapsed) => this.loop(elapsed));
-
-    this.stats.count += 1;
-    this.stats.delta = elapsed - this.stats.elapsed;
-    this.stats.elapsed = elapsed;
-
-    this.render();
-    this.evaluate();
-    this.update();
-  }
-
-  start() {
+  run() {
     window.addEventListener("keydown", (e) => {
-      this.input[e.key] = true;
+      const key = keyMap[e.key] ?? e.key;
+      this.input[key] = true;
     });
 
     window.addEventListener("keyup", (e) => {
-      delete this.input[e.key];
+      const key = keyMap[e.key] ?? e.key;
+      delete this.input[key];
     });
 
-    this.loop(0);
+    this.loop();
   }
 }
