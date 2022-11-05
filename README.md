@@ -10,6 +10,8 @@
 4. http://gameprogrammingpatterns.com/game-loop.html
 5. https://www.construct.net/en/tutorials/delta-time-framerate-2
 6. https://spicyyoghurt.com/tutorials/html5-javascript-game-development/create-a-proper-game-loop-with-requestanimationframe
+7. https://developer.ibm.com/tutorials/wa-build2dphysicsengine/
+8. https://gafferongames.com/post/fix_your_timestep/
 
 ## Legal
 
