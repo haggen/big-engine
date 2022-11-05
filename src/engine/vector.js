@@ -30,4 +30,8 @@ export class Vector {
   get length() {
     return Math.sqrt(this.x * this.x + this.y * this.y);
   }
+
+  toString() {
+    return `${this.x.toFixed(2)}, ${this.y.toFixed(2)}`;
+  }
 }
