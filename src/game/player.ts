@@ -31,6 +31,12 @@ game.addEventHandler("update", (delta) => {
   const { input, canvasElement } = game;
   const { position, direction } = player.state;
 
+  if ("Shift" in input) {
+    player.state.acceleration = 2000;
+  } else {
+    player.state.acceleration = 500;
+  }
+
   if ("w" in input) {
     direction.y = -1;
   } else if ("s" in input) {
