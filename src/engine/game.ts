@@ -1,11 +1,125 @@
 import { Entity } from "./entity";
 
+/**
+ * Game event handler.
+ */
 type Handler<T extends any[] = any[]> = (...args: T) => void;
 
-const keyMap = {
-  [" "]: "Space",
+/**
+ * Available keys.
+ */
+type Key =
+  | "Escape"
+  | "F1"
+  | "F2"
+  | "F3"
+  | "F4"
+  | "F5"
+  | "F6"
+  | "F7"
+  | "F8"
+  | "F9"
+  | "F10"
+  | "F11"
+  | "F12"
+  | "KeyQ"
+  | "KeyW"
+  | "KeyE"
+  | "KeyR"
+  | "KeyT"
+  | "KeyY"
+  | "KeyU"
+  | "KeyI"
+  | "KeyO"
+  | "KeyP"
+  | "KeyA"
+  | "KeyS"
+  | "KeyD"
+  | "KeyF"
+  | "KeyG"
+  | "KeyH"
+  | "KeyJ"
+  | "KeyK"
+  | "KeyL"
+  | "KeyZ"
+  | "KeyX"
+  | "KeyC"
+  | "KeyV"
+  | "KeyB"
+  | "KeyN"
+  | "KeyM"
+  | "Digit1"
+  | "Digit2"
+  | "Digit3"
+  | "Digit4"
+  | "Digit5"
+  | "Digit6"
+  | "Digit7"
+  | "Digit8"
+  | "Digit9"
+  | "Digit0"
+  | "Numpad1"
+  | "Numpad2"
+  | "Numpad3"
+  | "Numpad4"
+  | "Numpad5"
+  | "Numpad6"
+  | "Numpad7"
+  | "Numpad8"
+  | "Numpad9"
+  | "Numpad0"
+  | "Space"
+  | "ArrowUp"
+  | "ArrowDown"
+  | "ArrowLeft"
+  | "ArrowRight"
+  | "Backspace"
+  | "Enter"
+  | "ShiftLeft"
+  | "ShiftRight"
+  | "AltLeft"
+  | "AltRight"
+  | "ControlLeft"
+  | "ControlRight"
+  | "MetaLeft"
+  | "MetaRight"
+  | "Tab"
+  | "CapsLock"
+  | "Home"
+  | "End"
+  | "PageUp"
+  | "PageDown"
+  | "Insert"
+  | "Delete"
+  | "Minus"
+  | "Equal"
+  | "BracketLeft"
+  | "BracketRight"
+  | "Backslash"
+  | "Semicolon"
+  | "Quote"
+  | "Comma"
+  | "Period"
+  | "Slash"
+  | `Mouse${number}`;
+
+/**
+ * An input state.
+ */
+type Input = {
+  /** Which key has been activated. */
+  key: Key;
+  /** When it was activated. */
+  time: number;
+  /** How long it's been activated. */
+  duration: number;
+  /** If it's the first update the key's been detected. */
+  fresh: boolean;
 };
 
+/**
+ * Game.
+ */
 export class Game {
   canvasElement: HTMLCanvasElement;
   renderingContext: CanvasRenderingContext2D;
@@ -50,9 +164,9 @@ export class Game {
   entities: Record<string, Entity<any>> = {};
 
   /**
-   * Input state.
+   * Input state map.
    */
-  input: Record<string, true> = {};
+  input: Record<string, Input> = {};
 
   /**
    * Game event handlers.
@@ -172,19 +286,79 @@ export class Game {
   }
 
   /**
+   * Listen to input.
+   */
+  addInputHandlers() {
+    const addQueue: Input[] = [];
+    const removeQueue: Key[] = [];
+
+    this.canvasElement.addEventListener("keydown", (e) => {
+      e.preventDefault();
+
+      // Prevent duplicate keydown events.
+      if (e.repeat) {
+        return;
+      }
+
+      const state: Input = {
+        key: e.code as Key,
+        time: 0,
+        duration: 0,
+        fresh: true,
+      };
+      addQueue.push(state);
+    });
+
+    // Listen from window to catch events even if the canvas loses focus.
+    window.addEventListener("keyup", (e) => {
+      removeQueue.push(e.code as Key);
+    });
+
+    this.canvasElement.addEventListener("mousedown", (e) => {
+      const state: Input = {
+        key: `Mouse${e.button}` as Key,
+        time: 0,
+        duration: 0,
+        fresh: true,
+      };
+      addQueue.push(state);
+    });
+
+    // Listen from window to catch events even if the canvas loses focus.
+    window.addEventListener("mouseup", (e) => {
+      removeQueue.push(`Mouse${e.button}` as Key);
+    });
+
+    this.canvasElement.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+    });
+
+    // Update active input state.
+    // Use queues to avoid changing state in between updates.
+    this.addEventHandler("update", (delta) => {
+      Object.values(this.input).forEach((state) => {
+        state.duration += delta;
+        state.fresh = false;
+      });
+
+      addQueue.forEach((state) => {
+        state.time = this.statistics.time;
+        this.input[state.key] = state;
+      });
+      addQueue.length = 0;
+
+      removeQueue.forEach((key) => {
+        delete this.input[key];
+      });
+      removeQueue.length = 0;
+    });
+  }
+
+  /**
    * Start the game.
    */
   start() {
-    window.addEventListener("keydown", (e) => {
-      const key = keyMap[e.key] ?? e.key;
-      this.input[key] = true;
-    });
-
-    window.addEventListener("keyup", (e) => {
-      const key = keyMap[e.key] ?? e.key;
-      delete this.input[key];
-    });
-
+    this.addInputHandlers();
     this.loop();
   }
 }
