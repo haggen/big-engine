@@ -8,7 +8,7 @@ const initialState = {
   size: new Vector(16, 16),
   direction: new Vector(),
   velocity: new Vector(),
-  acceleration: 500,
+  acceleration: 0,
   speed: 0,
 };
 export const player = new Entity(initialState, "player");
@@ -19,35 +19,37 @@ game.addEventHandler("render", () => {
   const { position, size } = player.state;
 
   renderingContext.fillStyle = "blue";
-  renderingContext.fillRect(
+  renderingContext.beginPath();
+  renderingContext.rect(
     Math.round(position.x),
     Math.round(position.y),
     size.x,
     size.y
   );
+  renderingContext.fill();
 });
 
 game.addEventHandler("update", (delta) => {
   const { input, canvasElement } = game;
   const { position, direction } = player.state;
 
-  if ("Shift" in input) {
-    player.state.acceleration = 2000;
+  if ("ShiftLeft" in input) {
+    player.state.acceleration = 16 * 24;
   } else {
-    player.state.acceleration = 500;
+    player.state.acceleration = 16 * 12;
   }
 
-  if ("w" in input) {
+  if ("KeyW" in input) {
     direction.y = -1;
-  } else if ("s" in input) {
+  } else if ("KeyS" in input) {
     direction.y = +1;
   } else {
     direction.y = 0;
   }
 
-  if ("a" in input) {
+  if ("KeyA" in input) {
     direction.x = -1;
-  } else if ("d" in input) {
+  } else if ("KeyD" in input) {
     direction.x = +1;
   } else {
     direction.x = 0;
