@@ -1,54 +1,15 @@
-/**
- * Unique identifier.
- */
-let nextId = 1;
+import { createId } from "./shared";
 
-/**
- * Create random unique identifier.
- */
-function createId() {
-  return (nextId++).toString(36);
-}
-
-/**
- * Entity are things in the game world. e.g. the player, an enemy, a bullet, etc.
- */
-export class Entity<T extends { [key: string]: any }> {
+export class Entity {
   /**
-   * Unique identifier for this entity.
+   * Entity unique identifier.
    */
   id: string;
 
   /**
-   * Custom identifiers.
+   * Entity constructor.
    */
-  tags: string[] = [];
-
-  /**
-   * Entity data.
-   */
-  state: T;
-
-  /**
-   * Entity statistics.
-   */
-  statistics = {
-    rendering: {
-      /** Total frames rendered. */
-      count: 0,
-      /** Time spent in last frame. */
-      elapsed: 0,
-    },
-    simulation: {
-      /** Total simulation steps. */
-      steps: 0,
-      /** Time spent in last step. */
-      elapsed: 0,
-    },
-  };
-
-  constructor(initialState: T = {} as T, id: string = createId()) {
-    this.state = initialState;
+  constructor(id = createId()) {
     this.id = id;
   }
 }

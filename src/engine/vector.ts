@@ -5,6 +5,9 @@ export class Vector {
   x = 0;
   y = 0;
 
+  /**
+   * Vector constructor.
+   */
   constructor(x: Vector | number = 0, y?: number) {
     if (x instanceof Vector) {
       this.x = x.x;
@@ -24,11 +27,17 @@ export class Vector {
   }
 
   /**
-   * String representation, e.g. x, y.
+   * String representation, e.g. (x, y).
    */
   toString() {
-    const { x, y } = this;
-    return `${x.toFixed(2)}, ${y.toFixed(2)}`;
+    return `(${this.x.toFixed(2)}, ${this.y.toFixed(2)})`;
+  }
+
+  /**
+   * Serialize to JSON.
+   */
+  toJSON() {
+    return [this.x, this.y];
   }
 
   /**

@@ -1,4 +1,4 @@
-interface Math {
+declare interface Math {
   /**
    * Clamp a value between a minimum and maximum.
    */
