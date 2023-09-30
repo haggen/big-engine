@@ -1,13 +1,13 @@
-import "./monkeypatch";
-import { Component } from "./component";
-import { Event, Time, Key, Input, Handler, createId } from "./shared";
-import { System } from "./system";
+import { Component } from "~/src/engine/Component";
+import type { Key, Input, Handler } from "~/src/engine/shared";
+import { Event, Time, createId } from "~/src/engine/shared";
+import { System } from "~/src/engine/system";
 
 /**
- * The engine is responsible for three things:
- * - Holding game data.
+ * The engine is responsible for:
+ * - Organizing and retrieving game data.
  * - Executing the game loop.
- * - Bridging web platform APIs.
+ * - Providing web APIs for the systems.
  */
 export class Engine {
   /**

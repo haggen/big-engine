@@ -113,4 +113,13 @@ export class Vector {
       this.multiply(max);
     }
   }
+
+  /**
+   * Get the opposite vector.
+   */
+  opposite() {
+    const opposite = new Vector(this);
+    opposite.multiply(-1);
+    return opposite;
+  }
 }

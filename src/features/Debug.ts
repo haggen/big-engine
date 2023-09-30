@@ -1,7 +1,7 @@
-import { Component } from "../engine/component";
-import { Time } from "../engine/shared";
-import { System } from "../engine/system";
-import { Vector } from "../engine/vector";
+import { Component } from "~/src/engine/Component";
+import { Time } from "~/src/engine/shared";
+import { System } from "~/src/engine/System";
+import { Vector } from "~/src/engine/Vector";
 
 function format(label: string, value: string | number) {
   if (typeof value === "number") {
@@ -10,19 +10,24 @@ function format(label: string, value: string | number) {
   return `${label.padEnd(10)}${value}`;
 }
 
-export class Data extends Component<Data> {
+export class Data extends Component {
   text: string[] = [];
   position = new Vector();
+
+  constructor(data?: Partial<Data>) {
+    super();
+    Object.assign(this, data);
+  }
 }
 
 export class Debug extends System {
-  checkpoint: number;
-  entity: string;
+  checkpoint: number = 0;
+  entity: string = "debug";
 
   install() {
     this.checkpoint = this.engine.stats.time;
 
-    this.entity = this.engine.addEntity();
+    this.engine.addEntity(this.entity);
     this.engine.addComponent(this.entity, new Data());
   }
 
@@ -76,7 +81,7 @@ export class Debug extends System {
 
     for (let i = 0; i < data.text.length; i++) {
       this.engine.renderingContext.fillText(
-        data.text[i],
+        data.text[i]!,
         data.position.x,
         data.position.y + i * 16
       );

@@ -1,4 +1,4 @@
-import { Engine } from "./engine";
+import { Engine } from "./Engine";
 
 /**
  * Systems handle data and executes logic.
