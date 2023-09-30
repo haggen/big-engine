@@ -10,28 +10,33 @@ export class Control extends System {
     this.engine
       .getEntityByComponent(ActiveComponent, ControlComponent, MobileComponent)
       .forEach((entity) => {
-        const data = this.engine.getData(entity, PhysicsComponent);
+        const physicalData = this.engine.getData(entity, PhysicsComponent);
 
-        data.direction = new Vector(0, 0);
+        physicalData.direction = new Vector(0, 0);
 
         if (this.engine.input.get("ArrowLeft")) {
-          data.direction.x -= 1;
+          physicalData.direction.x -= 1;
         }
         if (this.engine.input.get("ArrowRight")) {
-          data.direction.x += 1;
+          physicalData.direction.x += 1;
         }
         if (this.engine.input.get("ArrowUp")) {
-          data.direction.y -= 1;
+          physicalData.direction.y -= 1;
         }
         if (this.engine.input.get("ArrowDown")) {
-          data.direction.y += 1;
+          physicalData.direction.y += 1;
         }
 
-        data.direction.normalize();
+        const space = this.engine.input.get("Space");
+        if (space?.fresh) {
+          physicalData.mass = physicalData.mass === 1 ? 100 : 1;
+        }
 
-        const v = new Vector(data.direction);
-        v.multiply(data.acceleration);
-        data.velocity.add(v);
+        physicalData.direction.normalize();
+
+        const v = new Vector(physicalData.direction);
+        v.multiply(physicalData.acceleration);
+        physicalData.velocity.add(v);
       });
   }
 }

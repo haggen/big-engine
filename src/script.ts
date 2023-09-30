@@ -36,7 +36,7 @@ game.addComponent(
       game.canvasElement.height / 2
     ),
     size: new Vector(30, 30),
-    mass: 2,
+    mass: 1,
     acceleration: 300,
   })
 );
