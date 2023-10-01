@@ -91,7 +91,7 @@ export class Debug extends System {
       return;
     }
 
-    this.engine.renderingContext.fillStyle = "rgba(0, 0, 0, .8)";
+    this.engine.renderingContext.fillStyle = "rgba(255, 255, 255, 0.9)";
     this.engine.renderingContext.fillRect(
       data.position.x,
       data.position.y,
@@ -99,8 +99,8 @@ export class Debug extends System {
       data.text.length * 14
     );
 
-    this.engine.renderingContext.fillStyle = "white";
-    this.engine.renderingContext.font = "12px monospace";
+    this.engine.renderingContext.fillStyle = "blue";
+    this.engine.renderingContext.font = "bold 12px monospace";
     this.engine.renderingContext.textBaseline = "top";
 
     for (let i = 0; i < data.text.length; i++) {

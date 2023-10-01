@@ -17,6 +17,8 @@ const canvasElement = document.querySelector("canvas");
 if (!canvasElement) {
   throw new Error("No <canvas> found");
 }
+canvasElement.width = window.innerWidth * 0.9;
+canvasElement.height = window.innerHeight * 0.9;
 
 const game = new Engine(canvasElement);
 game.config.simulation.rate = Time.Second / 50;
@@ -38,8 +40,27 @@ class CustomSystem extends System {
 
     const space = this.engine.input.get("Space");
     if (space?.fresh) {
-      physicalData.mass = physicalData.mass === 100 ? 1000 : 100;
+      physicalData.mass = physicalData.mass === 100 ? 2000 : 100;
       physicalData.acceleration = physicalData.mass === 100 ? 100 : 1000;
+    }
+
+    const boxes = this.engine.getEntityByComponent(BoxComponent);
+    for (let i = 0; i < boxes.length; i++) {
+      const box = boxes[i]!;
+      const physicalData = this.engine.getData(box, PhysicsComponent);
+
+      if (
+        physicalData.position.x + physicalData.size.x < 0 ||
+        physicalData.position.x > this.engine.canvasElement.width
+      ) {
+        this.engine.removeEntity(box);
+      }
+      if (
+        physicalData.position.y + physicalData.size.y < 0 ||
+        physicalData.position.y > this.engine.canvasElement.height
+      ) {
+        this.engine.removeEntity(box);
+      }
     }
   }
 
@@ -54,7 +75,7 @@ class CustomSystem extends System {
     this.engine.renderingContext.strokeStyle = "white";
     this.engine.renderingContext.lineWidth = 1;
 
-    const text = `BOXES [enter/backspace]: ${boxes.length}     MASS [space]: ${playerData.mass}     DEBUG [d]`;
+    const text = `BOXES [enter/backspace]: ${boxes.length}     PLAYER MASS [space]: ${playerData.mass}     DEBUG [d]`;
 
     this.engine.renderingContext.fillText(
       text,
@@ -94,11 +115,11 @@ class CustomSystem extends System {
   }
 }
 
-game.addSystem(new Debug.Debug());
 game.addSystem(new Control());
 game.addSystem(new Physics());
 game.addSystem(new Render());
 game.addSystem(new CustomSystem());
+game.addSystem(new Debug.Debug());
 
 const player = game.addEntity();
 game.addComponent(player, new ActiveComponent());
