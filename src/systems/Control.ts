@@ -27,11 +27,6 @@ export class Control extends System {
           physicalData.direction.y += 1;
         }
 
-        const space = this.engine.input.get("Space");
-        if (space?.fresh) {
-          physicalData.mass = physicalData.mass === 1 ? 100 : 1;
-        }
-
         physicalData.direction.normalize();
 
         const v = new Vector(physicalData.direction);

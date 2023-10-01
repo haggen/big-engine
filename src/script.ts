@@ -18,10 +18,8 @@ if (!canvasElement) {
   throw new Error("No <canvas> found");
 }
 
-const game = (window.game = new Engine(canvasElement));
-
-// game.config.simulation.rate = Time.Second / 30;
-
+const game = new Engine(canvasElement);
+game.config.simulation.rate = Time.Second / 50;
 game.start();
 
 class BoxComponent extends Component {}
@@ -34,6 +32,15 @@ class CustomSystem extends System {
     if (this.engine.input.get("Backspace")?.fresh) {
       this.deleteBoxes();
     }
+
+    const player = this.engine.getEntityByComponent(ControlComponent);
+    const physicalData = this.engine.getData(player[0]!, PhysicsComponent);
+
+    const space = this.engine.input.get("Space");
+    if (space?.fresh) {
+      physicalData.mass = physicalData.mass === 100 ? 1000 : 100;
+      physicalData.acceleration = physicalData.mass === 100 ? 100 : 1000;
+    }
   }
 
   render() {
@@ -41,12 +48,19 @@ class CustomSystem extends System {
     const player = this.engine.getEntityByComponent(ControlComponent);
     const playerData = this.engine.getData(player[0]!, PhysicsComponent);
 
-    this.engine.renderingContext.fillStyle = "green";
-    this.engine.renderingContext.fillText("Boxes: " + boxes.length, 200, 0);
+    this.engine.renderingContext.textBaseline = "top";
+    this.engine.renderingContext.font = "bold 14px monospace";
+    this.engine.renderingContext.fillStyle = "red";
+    this.engine.renderingContext.strokeStyle = "white";
+    this.engine.renderingContext.lineWidth = 1;
+
+    const text = `BOXES [enter/backspace]: ${boxes.length}     MASS [space]: ${playerData.mass}     DEBUG [d]`;
+
     this.engine.renderingContext.fillText(
-      "Player mass: " + playerData.mass,
-      300,
-      0
+      text,
+      this.engine.canvasElement.width / 2 -
+        this.engine.renderingContext.measureText(text).width / 2,
+      10
     );
   }
 
@@ -71,9 +85,8 @@ class CustomSystem extends System {
             game.canvasElement.width * Math.random(),
             game.canvasElement.height * Math.random()
           ),
-          size: new Vector(3, 3),
-          mass: 10,
-          friction: 0.95,
+          size: new Vector(5, 5),
+          mass: 50,
         })
       );
       game.addComponent(box, new RenderComponent({ color: "black" }));
@@ -81,14 +94,13 @@ class CustomSystem extends System {
   }
 }
 
+game.addSystem(new Debug.Debug());
 game.addSystem(new Control());
 game.addSystem(new Physics());
 game.addSystem(new Render());
 game.addSystem(new CustomSystem());
-game.addSystem(new Debug.Debug());
 
 const player = game.addEntity();
-
 game.addComponent(player, new ActiveComponent());
 game.addComponent(player, new MobileComponent());
 game.addComponent(
@@ -98,9 +110,9 @@ game.addComponent(
       game.canvasElement.width / 2,
       game.canvasElement.height / 2
     ),
-    size: new Vector(30, 30),
-    mass: 1,
-    acceleration: 300,
+    size: new Vector(20),
+    mass: 100,
+    acceleration: 100,
   })
 );
 game.addComponent(player, new RenderComponent());

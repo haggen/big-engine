@@ -12,41 +12,46 @@ export class Physics extends System {
       PhysicsComponent
     );
 
-    for (let ai = 0; ai < entities.length; ai++) {
-      const entityA = entities[ai]!;
+    for (let indexA = 0; indexA < entities.length; indexA++) {
+      const entityA = entities[indexA]!;
       const dataA = this.engine.getData(entityA, PhysicsComponent);
 
-      for (let bi = ai + 1; bi < entities.length; bi++) {
-        const entityB = entities[bi]!;
-
+      for (let indexB = indexA + 1; indexB < entities.length; indexB++) {
+        const entityB = entities[indexB]!;
         const dataB = this.engine.getData(entityB, PhysicsComponent);
 
         if (!this.isColliding(dataA, dataB)) {
           continue;
         }
 
-        const normal = new Vector(dataA.position);
-        normal.subtract(dataB.position);
-        normal.normalize();
+        const centerA = new Vector(dataA.position);
+        centerA.add(dataA.size.x / 2, dataA.size.y / 2);
+
+        const centerB = new Vector(dataB.position);
+        centerB.add(dataB.size.x / 2, dataB.size.y / 2);
+
+        const collision = new Vector(centerA);
+        collision.subtract(centerB);
+        collision.normalize();
 
         const velocityDiff = new Vector(dataA.velocity);
         velocityDiff.subtract(dataB.velocity);
 
-        const relativeVelocity = normal.dot(velocityDiff);
+        const relativeVelocity = collision.dot(velocityDiff);
 
         const impulse = (2 * relativeVelocity) / (dataA.mass + dataB.mass);
 
-        const forceA = new Vector(normal);
+        const forceA = new Vector(collision);
         forceA.multiply(impulse * dataB.mass);
         dataA.velocity.subtract(forceA);
 
-        const forceB = new Vector(normal);
+        const forceB = new Vector(collision);
         forceB.multiply(impulse * dataA.mass);
         dataB.velocity.add(forceB);
       }
 
+      dataA.velocity.divide(1 + dataA.mass / 1000);
       dataA.velocity.clamp(1000);
-      dataA.velocity.multiply(dataA.friction);
 
       if (this.engine.getData(entityA, MobileComponent)) {
         const v = new Vector(dataA.velocity);

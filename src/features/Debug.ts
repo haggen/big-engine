@@ -1,3 +1,6 @@
+import { ActiveComponent } from "~/src/components/Active";
+import { PhysicsComponent } from "~/src/components/Physics";
+import { RenderComponent } from "~/src/components/Render";
 import { Component } from "~/src/engine/Component";
 import { Time } from "~/src/engine/shared";
 import { System } from "~/src/engine/System";
@@ -13,6 +16,7 @@ function format(label: string, value: string | number) {
 export class Data extends Component {
   text: string[] = [];
   position = new Vector();
+  enabled = false;
 
   constructor(data?: Partial<Data>) {
     super();
@@ -34,6 +38,14 @@ export class Debug extends System {
   update() {
     const delta = this.engine.stats.time - this.checkpoint;
     const data = this.engine.getData(this.entity, Data);
+
+    if (this.engine.input.get("KeyD")?.fresh) {
+      data.enabled = !data.enabled;
+    }
+
+    if (!data.enabled) {
+      return;
+    }
 
     // Update keys in real time.
     if (data.text.length > 0) {
@@ -75,11 +87,15 @@ export class Debug extends System {
   render() {
     const data = this.engine.getData(this.entity, Data);
 
+    if (!data.enabled) {
+      return;
+    }
+
     this.engine.renderingContext.fillStyle = "rgba(0, 0, 0, .8)";
     this.engine.renderingContext.fillRect(
       data.position.x,
       data.position.y,
-      20 * 8,
+      135,
       data.text.length * 14
     );
 
@@ -92,6 +108,41 @@ export class Debug extends System {
         data.text[i]!,
         data.position.x,
         data.position.y + i * 14
+      );
+    }
+
+    const entities = this.engine.getEntityByComponent(
+      ActiveComponent,
+      PhysicsComponent,
+      RenderComponent
+    );
+
+    for (let i = 0; i < entities.length; i++) {
+      const entity = entities[i]!;
+      const physical = this.engine.getData(entity, PhysicsComponent);
+
+      // Draw an arrow to show velocity
+      this.engine.renderingContext.strokeStyle = "green";
+      this.engine.renderingContext.beginPath();
+      this.engine.renderingContext.moveTo(
+        physical.position.x + physical.size.x / 2,
+        physical.position.y + physical.size.y / 2
+      );
+      this.engine.renderingContext.lineTo(
+        physical.position.x + physical.size.x / 2 + physical.velocity.x / 10,
+        physical.position.y + physical.size.y / 2 + physical.velocity.y / 10
+      );
+      this.engine.renderingContext.stroke();
+      this.engine.renderingContext.closePath();
+
+      const text = physical.velocity.length.toFixed(2);
+      const textInfo = this.engine.renderingContext.measureText(text);
+      this.engine.renderingContext.fillStyle = "green";
+      this.engine.renderingContext.font = "12px monospace";
+      this.engine.renderingContext.fillText(
+        text,
+        physical.position.x - textInfo.width,
+        physical.position.y + -10
       );
     }
   }

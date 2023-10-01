@@ -75,6 +75,13 @@ export class Vector {
   }
 
   /**
+   * Change vector by dividing both components by given scalar.
+   */
+  divide(scalar: number) {
+    this.multiply(1 / scalar);
+  }
+
+  /**
    * Get the dot product between two vectors.
    */
   dot(vector: Vector) {

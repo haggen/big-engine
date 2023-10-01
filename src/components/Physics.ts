@@ -7,8 +7,7 @@ export class PhysicsComponent extends Component {
   direction = new Vector();
   velocity = new Vector();
   acceleration = 100;
-  friction = 0.7;
-  mass = 1;
+  mass = 10;
 
   constructor(data?: Partial<PhysicsComponent>) {
     super();
