@@ -12,17 +12,14 @@ export class Physics extends System {
       PhysicsComponent
     );
 
-    for (let ai = 0; ai < entities.length - 1; ai++) {
+    for (let ai = 0; ai < entities.length; ai++) {
+      const entityA = entities[ai]!;
+      const dataA = this.engine.getData(entityA, PhysicsComponent);
+
       for (let bi = ai + 1; bi < entities.length; bi++) {
-        const aId = entities[ai];
-        const bId = entities[bi];
+        const entityB = entities[bi]!;
 
-        if (!aId || !bId) {
-          continue;
-        }
-
-        const dataA = this.engine.getData(aId, PhysicsComponent);
-        const dataB = this.engine.getData(bId, PhysicsComponent);
+        const dataB = this.engine.getData(entityB, PhysicsComponent);
 
         if (!this.isColliding(dataA, dataB)) {
           continue;
@@ -47,20 +44,16 @@ export class Physics extends System {
         forceB.multiply(impulse * dataA.mass);
         dataB.velocity.add(forceB);
       }
-    }
 
-    entities.forEach((entity) => {
-      const data = this.engine.getData(entity, PhysicsComponent);
+      dataA.velocity.clamp(1000);
+      dataA.velocity.multiply(dataA.friction);
 
-      data.velocity.clamp(1000);
-      data.velocity.multiply(data.friction);
-
-      if (this.engine.getData(entity, MobileComponent)) {
-        const v = new Vector(data.velocity);
+      if (this.engine.getData(entityA, MobileComponent)) {
+        const v = new Vector(dataA.velocity);
         v.multiply(delta / Time.Second);
-        data.position.add(v);
+        dataA.position.add(v);
       }
-    });
+    }
   }
 
   isColliding(a: PhysicsComponent, b: PhysicsComponent) {

@@ -1,7 +1,7 @@
 import { Component } from "~/src/engine/Component";
-import type { Key, Input, Handler } from "~/src/engine/shared";
+import { System } from "~/src/engine/System";
 import { Event, Time, createId } from "~/src/engine/shared";
-import { System } from "~/src/engine/system";
+import type { Key, Input, Handler } from "~/src/engine/shared";
 
 /**
  * The engine is responsible for:
@@ -70,9 +70,19 @@ export class Engine {
   systems = new Map<typeof System, System>();
 
   /**
+   * Set of entity ids.
+   */
+  // entities = new Set<string>();
+
+  /**
    * An index of components by entitiy ids.
    */
   data = new Map<string, Map<typeof Component, Component>>();
+
+  /**
+   * An index of entities by component types.
+   */
+  // dataInvertedIndex = new Map<typeof Component, Set<string>>();
 
   /**
    * Map of input keys and their state.
@@ -150,15 +160,25 @@ export class Engine {
   }
 
   /**
+   * Remove an entity from the game.
+   */
+  removeEntity(entity: string) {
+    this.data.delete(entity);
+  }
+
+  /**
    * Add component to an entity.
    *
    * @param entity The entity.
    * @param component The component.
    */
   addComponent<T extends Component>(entity: string, component: T) {
+    if (!this.data.has(entity)) {
+      throw new Error(`Entity ${entity} not found`);
+    }
     this.data
-      .get(entity)
-      ?.set(component.constructor as typeof Component, component);
+      .get(entity)!
+      .set(component.constructor as typeof Component, component);
   }
 
   /**
@@ -167,7 +187,10 @@ export class Engine {
    * @param entity The entity.
    */
   removeComponent<T extends typeof Component>(entity: string, component: T) {
-    this.data.get(entity)?.delete(component);
+    if (!this.data.has(entity)) {
+      throw new Error(`Entity ${entity} not found`);
+    }
+    this.data.get(entity)!.delete(component);
   }
 
   /**
@@ -177,7 +200,11 @@ export class Engine {
    * @param component Component type.
    */
   getData<T extends typeof Component>(entity: string, component: T) {
-    return this.data.get(entity)?.get(component) as InstanceType<T>;
+    const components = this.data.get(entity);
+    if (!components) {
+      throw new Error(`Entity ${entity} not found`);
+    }
+    return components.get(component) as InstanceType<T>;
   }
 
   /**
@@ -186,9 +213,24 @@ export class Engine {
    * @param components List of components to match.
    */
   getEntityByComponent(...components: (typeof Component)[]) {
-    return Array.from(this.data.keys()).filter((entity) =>
-      components.every((component) => this.data.get(entity)?.has(component))
-    );
+    const entities = Array.from(this.data.keys());
+    const result = [];
+
+    loop: for (let i = 0; i < entities.length; i++) {
+      const entity = entities[i]!;
+
+      for (let j = 0; j < components.length; j++) {
+        const component = components[j]!;
+
+        if (!this.data.get(entity)!.has(component)) {
+          continue loop;
+        }
+      }
+
+      result.push(entity);
+    }
+
+    return result;
   }
 
   /**
@@ -240,7 +282,11 @@ export class Engine {
     const delta = time - this.stats.time;
 
     stats.time = time;
-    stats.simulation.drift += delta;
+
+    // Limit drift.
+    if (stats.simulation.drift < Time.Second) {
+      stats.simulation.drift += delta;
+    }
 
     // Simulate the game in a fixed rate, accounting for drift, i.e. leftover time between updates.
     while (stats.simulation.drift >= config.simulation.rate) {
