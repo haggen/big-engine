@@ -9,6 +9,9 @@ import { ControlComponent } from "~/src/components/Control";
 import * as Debug from "~/src/features/Debug";
 import { ActiveComponent } from "~/src/components/Active";
 import { MobileComponent } from "~/src/components/Mobile";
+import { Time } from "~/src/engine/shared";
+import { System } from "~/src/engine/System";
+import { Component } from "~/src/engine/Component";
 
 const canvasElement = document.querySelector("canvas");
 if (!canvasElement) {
@@ -17,11 +20,71 @@ if (!canvasElement) {
 
 const game = (window.game = new Engine(canvasElement));
 
+// game.config.simulation.rate = Time.Second / 30;
+
 game.start();
+
+class BoxComponent extends Component {}
+
+class CustomSystem extends System {
+  update(delta: number) {
+    if (this.engine.input.get("Enter")?.fresh) {
+      this.spawnMoreBoxes();
+    }
+    if (this.engine.input.get("Backspace")?.fresh) {
+      this.deleteBoxes();
+    }
+  }
+
+  render() {
+    const boxes = this.engine.getEntityByComponent(BoxComponent);
+    const player = this.engine.getEntityByComponent(ControlComponent);
+    const playerData = this.engine.getData(player[0]!, PhysicsComponent);
+
+    this.engine.renderingContext.fillStyle = "green";
+    this.engine.renderingContext.fillText("Boxes: " + boxes.length, 200, 0);
+    this.engine.renderingContext.fillText(
+      "Player mass: " + playerData.mass,
+      300,
+      0
+    );
+  }
+
+  deleteBoxes() {
+    const boxes = this.engine.getEntityByComponent(BoxComponent);
+    for (let i = 0; i < 100; i++) {
+      this.engine.removeEntity(boxes[i]!);
+    }
+  }
+
+  spawnMoreBoxes() {
+    for (let i = 0; i < 100; i++) {
+      const box = game.addEntity();
+
+      game.addComponent(box, new BoxComponent());
+      game.addComponent(box, new ActiveComponent());
+      game.addComponent(box, new MobileComponent());
+      game.addComponent(
+        box,
+        new PhysicsComponent({
+          position: new Vector(
+            game.canvasElement.width * Math.random(),
+            game.canvasElement.height * Math.random()
+          ),
+          size: new Vector(3, 3),
+          mass: 10,
+          friction: 0.95,
+        })
+      );
+      game.addComponent(box, new RenderComponent({ color: "black" }));
+    }
+  }
+}
 
 game.addSystem(new Control());
 game.addSystem(new Physics());
 game.addSystem(new Render());
+game.addSystem(new CustomSystem());
 game.addSystem(new Debug.Debug());
 
 const player = game.addEntity();
@@ -42,23 +105,3 @@ game.addComponent(
 );
 game.addComponent(player, new RenderComponent());
 game.addComponent(player, new ControlComponent());
-
-for (let i = 0; i < 800; i++) {
-  const box = game.addEntity();
-
-  game.addComponent(box, new ActiveComponent());
-  game.addComponent(box, new MobileComponent());
-  game.addComponent(
-    box,
-    new PhysicsComponent({
-      position: new Vector(
-        game.canvasElement.width * Math.random(),
-        game.canvasElement.height * Math.random()
-      ),
-      size: new Vector(3, 3),
-      mass: 1,
-      friction: 0.95,
-    })
-  );
-  game.addComponent(box, new RenderComponent({ color: "black" }));
-}

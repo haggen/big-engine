@@ -43,7 +43,7 @@ export class Debug extends System {
       );
     }
 
-    if (delta < 500) {
+    if (delta < 300) {
       return;
     }
 
@@ -73,17 +73,25 @@ export class Debug extends System {
   }
 
   render() {
-    this.engine.renderingContext.fillStyle = "red";
-    this.engine.renderingContext.font = "14px monospace";
-    this.engine.renderingContext.textBaseline = "top";
-
     const data = this.engine.getData(this.entity, Data);
+
+    this.engine.renderingContext.fillStyle = "rgba(0, 0, 0, .8)";
+    this.engine.renderingContext.fillRect(
+      data.position.x,
+      data.position.y,
+      20 * 8,
+      data.text.length * 14
+    );
+
+    this.engine.renderingContext.fillStyle = "white";
+    this.engine.renderingContext.font = "12px monospace";
+    this.engine.renderingContext.textBaseline = "top";
 
     for (let i = 0; i < data.text.length; i++) {
       this.engine.renderingContext.fillText(
         data.text[i]!,
         data.position.x,
-        data.position.y + i * 16
+        data.position.y + i * 14
       );
     }
   }

@@ -1,11 +1,11 @@
-# BIG Engine
+# Badly Implemented Game Engine
 
-> BIG Engine is a rendering and simulation engine for making 2D browser games written in TypeScript.
+> BIG Engine is an ECS game engine written in TypeScript for making 2D browser games.
 
 ## Goals
 
-- ⚙️ ECS-ish architecture.
-- 🧩 Coherent and convenient API.
+- ⚙️ ECS architecture.
+- 🧩 Coherent and easy API.
 - 🪖 Type safety.
 - 🖼️ Level editor.
 - 🧑‍🤝‍🧑 Online multiplayer.
@@ -16,7 +16,7 @@ For science. 🧪
 
 ## Is it good?
 
-No. 🫠
+No. 🙃
 
 ## References
 
