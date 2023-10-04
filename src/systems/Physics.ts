@@ -1,24 +1,20 @@
-import { ActiveComponent } from "~/src/components/Active";
-import { MobileComponent } from "~/src/components/Mobile";
-import { PhysicsComponent } from "~/src/components/Physics";
-import { System } from "~/src/engine/System";
-import { Vector } from "~/src/engine/Vector";
-import { Time } from "~/src/engine/shared";
+import { Activable } from "~/src/components/Active";
+import { Mobile } from "~/src/components/Mobile";
+import { Physical } from "~/src/components/Physical";
+import { System, Vector } from "~/src/internals";
+import { Time } from "~/src/shared/Time";
 
 export class Physics extends System {
   update(delta: number) {
-    const entities = this.engine.getEntityByComponent(
-      ActiveComponent,
-      PhysicsComponent
-    );
+    const entities = this.engine.state.query(Activable, Physical);
 
     for (let indexA = 0; indexA < entities.length; indexA++) {
       const entityA = entities[indexA]!;
-      const dataA = this.engine.getData(entityA, PhysicsComponent);
+      const dataA = this.engine.state.get(entityA, Physical);
 
       for (let indexB = indexA + 1; indexB < entities.length; indexB++) {
         const entityB = entities[indexB]!;
-        const dataB = this.engine.getData(entityB, PhysicsComponent);
+        const dataB = this.engine.state.get(entityB, Physical);
 
         if (!this.isColliding(dataA, dataB)) {
           continue;
@@ -53,7 +49,7 @@ export class Physics extends System {
       dataA.velocity.divide(1 + dataA.mass / 1000);
       dataA.velocity.clamp(1000);
 
-      if (this.engine.getData(entityA, MobileComponent)) {
+      if (this.engine.state.get(entityA, Mobile)) {
         const v = new Vector(dataA.velocity);
         v.multiply(delta / Time.Second);
         dataA.position.add(v);
@@ -61,7 +57,7 @@ export class Physics extends System {
     }
   }
 
-  isColliding(a: PhysicsComponent, b: PhysicsComponent) {
+  isColliding(a: Physical, b: Physical) {
     const al = a.position.x;
     const ar = a.position.x + a.size.x;
     const at = a.position.y;

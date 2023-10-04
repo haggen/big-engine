@@ -1,17 +1,14 @@
-import { Engine } from "~/src/engine/Engine";
-import { Vector } from "~/src/engine/Vector";
+import { System, Component, Engine, Vector } from "~/src/internals";
 import { Control } from "~/src/systems/Control";
 import { Physics } from "~/src/systems/Physics";
 import { Render } from "~/src/systems/Render";
-import { PhysicsComponent } from "~/src/components/Physics";
-import { RenderComponent } from "~/src/components/Render";
-import { ControlComponent } from "~/src/components/Control";
+import { Physical } from "~/src/components/Physical";
+import { Renderable } from "~/src/components/Render";
+import { Controllable } from "~/src/components/Controllable";
 import * as Debug from "~/src/features/Debug";
-import { ActiveComponent } from "~/src/components/Active";
-import { MobileComponent } from "~/src/components/Mobile";
-import { Time } from "~/src/engine/shared";
-import { System } from "~/src/engine/System";
-import { Component } from "~/src/engine/Component";
+import { Activable } from "~/src/components/Active";
+import { Mobile } from "~/src/components/Mobile";
+import { Time } from "~/src/shared/Time";
 
 const canvasElement = document.querySelector("canvas");
 if (!canvasElement) {
@@ -35,39 +32,39 @@ class CustomSystem extends System {
       this.deleteBoxes();
     }
 
-    const player = this.engine.getEntityByComponent(ControlComponent);
-    const physicalData = this.engine.getData(player[0]!, PhysicsComponent);
+    const player = this.engine.state.query(Controllable);
+    const physicalData = this.engine.state.get(player[0]!, Physical);
 
     const space = this.engine.input.get("Space");
     if (space?.fresh) {
       physicalData.mass = physicalData.mass === 100 ? 2000 : 100;
-      physicalData.acceleration = physicalData.mass === 100 ? 100 : 1000;
+      physicalData.acceleration = physicalData.mass * 2;
     }
 
-    const boxes = this.engine.getEntityByComponent(BoxComponent);
+    const boxes = this.engine.state.query(BoxComponent);
     for (let i = 0; i < boxes.length; i++) {
       const box = boxes[i]!;
-      const physicalData = this.engine.getData(box, PhysicsComponent);
+      const physicalData = this.engine.state.get(box, Physical);
 
       if (
         physicalData.position.x + physicalData.size.x < 0 ||
         physicalData.position.x > this.engine.canvasElement.width
       ) {
-        this.engine.removeEntity(box);
+        this.engine.state.removeEntity(box);
       }
       if (
         physicalData.position.y + physicalData.size.y < 0 ||
         physicalData.position.y > this.engine.canvasElement.height
       ) {
-        this.engine.removeEntity(box);
+        this.engine.state.removeEntity(box);
       }
     }
   }
 
-  render() {
-    const boxes = this.engine.getEntityByComponent(BoxComponent);
-    const player = this.engine.getEntityByComponent(ControlComponent);
-    const playerData = this.engine.getData(player[0]!, PhysicsComponent);
+  draw() {
+    const boxes = this.engine.state.query(BoxComponent);
+    const player = this.engine.state.query(Controllable);
+    const playerPhysical = this.engine.state.get(player[0]!, Physical);
 
     this.engine.renderingContext.textBaseline = "top";
     this.engine.renderingContext.font = "bold 14px monospace";
@@ -75,7 +72,7 @@ class CustomSystem extends System {
     this.engine.renderingContext.strokeStyle = "white";
     this.engine.renderingContext.lineWidth = 1;
 
-    const text = `BOXES [enter/backspace]: ${boxes.length}     PLAYER MASS [space]: ${playerData.mass}     DEBUG [d]`;
+    const text = `BOXES [enter/backspace]: ${boxes.length}     PLAYER MASS [space]: ${playerPhysical.mass}     DEBUG [d]`;
 
     this.engine.renderingContext.fillText(
       text,
@@ -86,22 +83,22 @@ class CustomSystem extends System {
   }
 
   deleteBoxes() {
-    const boxes = this.engine.getEntityByComponent(BoxComponent);
+    const boxes = this.engine.state.query(BoxComponent);
     for (let i = 0; i < 100; i++) {
-      this.engine.removeEntity(boxes[i]!);
+      this.engine.state.removeEntity(boxes[i]!);
     }
   }
 
   spawnMoreBoxes() {
     for (let i = 0; i < 100; i++) {
-      const box = game.addEntity();
+      const box = game.state.addEntity();
 
-      game.addComponent(box, new BoxComponent());
-      game.addComponent(box, new ActiveComponent());
-      game.addComponent(box, new MobileComponent());
-      game.addComponent(
+      game.state.addComponent(box, new BoxComponent());
+      game.state.addComponent(box, new Activable());
+      game.state.addComponent(box, new Mobile());
+      game.state.addComponent(
         box,
-        new PhysicsComponent({
+        new Physical({
           position: new Vector(
             game.canvasElement.width * Math.random(),
             game.canvasElement.height * Math.random()
@@ -110,7 +107,7 @@ class CustomSystem extends System {
           mass: 50,
         })
       );
-      game.addComponent(box, new RenderComponent({ color: "black" }));
+      game.state.addComponent(box, new Renderable({ color: "black" }));
     }
   }
 }
@@ -121,20 +118,20 @@ game.addSystem(new Render());
 game.addSystem(new CustomSystem());
 game.addSystem(new Debug.Debug());
 
-const player = game.addEntity();
-game.addComponent(player, new ActiveComponent());
-game.addComponent(player, new MobileComponent());
-game.addComponent(
+const player = game.state.addEntity();
+game.state.addComponent(player, new Activable());
+game.state.addComponent(player, new Mobile());
+game.state.addComponent(
   player,
-  new PhysicsComponent({
+  new Physical({
     position: new Vector(
       game.canvasElement.width / 2,
       game.canvasElement.height / 2
     ),
     size: new Vector(20),
     mass: 100,
-    acceleration: 100,
+    acceleration: 200,
   })
 );
-game.addComponent(player, new RenderComponent());
-game.addComponent(player, new ControlComponent());
+game.state.addComponent(player, new Renderable());
+game.state.addComponent(player, new Controllable());

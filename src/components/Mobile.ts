@@ -1,3 +1,3 @@
-import { Component } from "~/src/engine/Component";
+import { Component } from "~/src/internals/Component";
 
-export class MobileComponent extends Component {}
+export class Mobile extends Component {}

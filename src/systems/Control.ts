@@ -1,37 +1,41 @@
-import { ActiveComponent } from "~/src/components/Active";
-import { ControlComponent } from "~/src/components/Control";
-import { MobileComponent } from "~/src/components/Mobile";
-import { PhysicsComponent } from "~/src/components/Physics";
-import { System } from "~/src/engine/System";
-import { Vector } from "~/src/engine/Vector";
+import { System, Vector } from "~/src/internals";
+import { Activable } from "~/src/components/Active";
+import { Controllable } from "~/src/components/Controllable";
+import { Mobile } from "~/src/components/Mobile";
+import { Physical } from "~/src/components/Physical";
 
 export class Control extends System {
-  update(delta: number) {
-    this.engine
-      .getEntityByComponent(ActiveComponent, ControlComponent, MobileComponent)
-      .forEach((entity) => {
-        const physicalData = this.engine.getData(entity, PhysicsComponent);
+  update() {
+    const entities = this.engine.state.query(Activable, Controllable, Mobile);
 
-        physicalData.direction = new Vector(0, 0);
+    for (const entity of entities) {
+      const physical = this.engine.state.get(entity, Physical);
 
-        if (this.engine.input.get("ArrowLeft")) {
-          physicalData.direction.x -= 1;
-        }
-        if (this.engine.input.get("ArrowRight")) {
-          physicalData.direction.x += 1;
-        }
-        if (this.engine.input.get("ArrowUp")) {
-          physicalData.direction.y -= 1;
-        }
-        if (this.engine.input.get("ArrowDown")) {
-          physicalData.direction.y += 1;
-        }
+      if (this.engine.input.isPressed("Mouse0")) {
+        physical.direction = new Vector(this.engine.input.coordinates);
+        physical.direction.subtract(physical.position);
+      } else {
+        physical.direction = new Vector(0, 0);
 
-        physicalData.direction.normalize();
+        if (this.engine.input.isPressed("ArrowLeft")) {
+          physical.direction.x -= 1;
+        }
+        if (this.engine.input.isPressed("ArrowRight")) {
+          physical.direction.x += 1;
+        }
+        if (this.engine.input.isPressed("ArrowUp")) {
+          physical.direction.y -= 1;
+        }
+        if (this.engine.input.isPressed("ArrowDown")) {
+          physical.direction.y += 1;
+        }
+      }
 
-        const v = new Vector(physicalData.direction);
-        v.multiply(physicalData.acceleration);
-        physicalData.velocity.add(v);
-      });
+      physical.direction.normalize();
+
+      const force = new Vector(physical.direction);
+      force.multiply(physical.acceleration);
+      physical.velocity.add(force);
+    }
   }
 }

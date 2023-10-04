@@ -1,9 +1,9 @@
-import { Component } from "~/src/engine/Component";
+import { Component } from "~/src/internals/Component";
 
-export class RenderComponent extends Component {
+export class Renderable extends Component {
   color = "fuchsia";
 
-  constructor(data?: Partial<RenderComponent>) {
+  constructor(data?: Partial<Renderable>) {
     super();
     Object.assign(this, data);
   }

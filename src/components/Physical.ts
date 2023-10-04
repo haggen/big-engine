@@ -1,7 +1,6 @@
-import { Component } from "~/src/engine/Component";
-import { Vector } from "~/src/engine/Vector";
+import { Component, Vector } from "~/src/internals";
 
-export class PhysicsComponent extends Component {
+export class Physical extends Component {
   position = new Vector();
   size = new Vector(10, 10);
   direction = new Vector();
@@ -9,7 +8,7 @@ export class PhysicsComponent extends Component {
   acceleration = 100;
   mass = 10;
 
-  constructor(data?: Partial<PhysicsComponent>) {
+  constructor(data?: Partial<Physical>) {
     super();
     Object.assign(this, data);
   }

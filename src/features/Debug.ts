@@ -1,10 +1,8 @@
-import { ActiveComponent } from "~/src/components/Active";
-import { PhysicsComponent } from "~/src/components/Physics";
-import { RenderComponent } from "~/src/components/Render";
-import { Component } from "~/src/engine/Component";
-import { Time } from "~/src/engine/shared";
-import { System } from "~/src/engine/System";
-import { Vector } from "~/src/engine/Vector";
+import { Component, System, Vector } from "~/src/internals";
+import { Activable } from "~/src/components/Active";
+import { Physical } from "~/src/components/Physical";
+import { Renderable } from "~/src/components/Render";
+import { Time } from "~/src/shared/Time";
 
 function format(label: string, value: string | number) {
   if (typeof value === "number") {
@@ -31,13 +29,13 @@ export class Debug extends System {
   install() {
     this.checkpoint = this.engine.stats.time;
 
-    this.engine.addEntity(this.entity);
-    this.engine.addComponent(this.entity, new Data());
+    this.engine.state.addEntity(this.entity);
+    this.engine.state.addComponent(this.entity, new Data());
   }
 
   update() {
     const delta = this.engine.stats.time - this.checkpoint;
-    const data = this.engine.getData(this.entity, Data);
+    const data = this.engine.state.get(this.entity, Data);
 
     if (this.engine.input.get("KeyD")?.fresh) {
       data.enabled = !data.enabled;
@@ -51,7 +49,7 @@ export class Debug extends System {
     if (data.text.length > 0) {
       data.text[12] = format(
         "Keys",
-        Array.from(this.engine.input.keys()).toString()
+        Array.from(this.engine.input.state.keys()).toString()
       );
     }
 
@@ -68,7 +66,7 @@ export class Debug extends System {
     data.text.push(format("Duration", this.engine.stats.rendering.duration));
 
     data.text.push("--Simulation".padEnd(20, "-"));
-    data.text.push(format("Steps", this.engine.stats.simulation.steps));
+    data.text.push(format("Steps", this.engine.stats.simulation.count));
     data.text.push(
       format("Rate", Time.Second / this.engine.config.simulation.rate)
     );
@@ -78,14 +76,14 @@ export class Debug extends System {
 
     data.text.push("--Input".padEnd(20, "-"));
     data.text.push(
-      format("Keys", Array.from(this.engine.input.keys()).toString())
+      format("Keys", Array.from(this.engine.input.state.keys()).toString())
     );
 
     this.checkpoint = this.engine.stats.time;
   }
 
-  render() {
-    const data = this.engine.getData(this.entity, Data);
+  draw() {
+    const data = this.engine.state.get(this.entity, Data);
 
     if (!data.enabled) {
       return;
@@ -111,15 +109,10 @@ export class Debug extends System {
       );
     }
 
-    const entities = this.engine.getEntityByComponent(
-      ActiveComponent,
-      PhysicsComponent,
-      RenderComponent
-    );
+    const entities = this.engine.state.query(Activable, Physical, Renderable);
 
-    for (let i = 0; i < entities.length; i++) {
-      const entity = entities[i]!;
-      const physical = this.engine.getData(entity, PhysicsComponent);
+    for (const entity of entities) {
+      const physical = this.engine.state.get(entity, Physical);
 
       // Draw an arrow to show velocity
       this.engine.renderingContext.strokeStyle = "green";
