@@ -29,6 +29,7 @@ No. 🙃
 7. <https://developer.ibm.com/tutorials/wa-build2dphysicsengine/>
 8. <https://gafferongames.com/post/fix_your_timestep/>
 9. <https://medium.com/@swiftsnippets/vectors-position-velocity-and-direction-b85342ed9e3a>
+10. <https://blog.demofox.org/2017/05/29/when-random-numbers-are-too-random-low-discrepancy-sequences/>
 
 ## Legal
 
